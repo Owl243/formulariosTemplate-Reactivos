@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ValidadoresService } from 'src/app/services/validadores.service';
 
 @Component({
   selector: 'app-reactive',
@@ -8,7 +9,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 export class ReactiveComponent {
   forma : FormGroup;
 
-  constructor(private fb : FormBuilder){
+  constructor(private fb : FormBuilder,
+              private validadores : ValidadoresService){
     this.forma = this.fb.group({
       nombre  : [''],
       apellido: [''],
@@ -19,12 +21,11 @@ export class ReactiveComponent {
     })
     this.crearFormulario();
     this.cargarInfo();
-
   }
   crearFormulario(){
     this.forma = this.fb.group({
       nombre  : ['',[Validators.required, Validators.minLength(4)]],
-      apellido: ['',[Validators.required, Validators.minLength(4)]],
+      apellido: ['',[Validators.required, Validators.minLength(4), this.validadores.noHerrera]],
       correo  : ['',[Validators.required, Validators.pattern
                       ('[A-Za-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}$')]],
       numero  : ['',[Validators.required,  Validators.pattern('^[0-9]{10}$') ]],
@@ -33,10 +34,11 @@ export class ReactiveComponent {
         ciudad : [ '',Validators.required],
       }),
       pasatiempos: this.fb.array([
-        [],[],[],[]
+
       ])
     });
   }
+
 
   cargarInfo(){
     this.forma.reset({
@@ -51,22 +53,30 @@ export class ReactiveComponent {
     })
   }
 
+  agregarPasatiempo(){
+    this.pasatiempos.push( this.fb.control(''))
+  }
+  borrarPasatiempo(i:number){
+    this.pasatiempos.removeAt(i);
+  }
+
 
   guardar(){
     if (this.forma.invalid){
       return Object.values(this.forma.controls).forEach(control => {
         if(control instanceof FormGroup){
+          console.log(this.forma.value);
           Object.values(control.controls).forEach(control => control.markAsTouched());
         } else {
       control.markAsTouched();
-      console.log(this.forma.value);
     }
   });
   }
-  //posteo de info
-this.forma.reset();
 }
-
+  get pasatiempos(){
+    const pasatiempos = this.forma.get('pasatiempos');
+    return this.forma.get('pasatiempos') as FormArray;
+  }
 
   get nombreNoValido(): boolean {
     const nombreControl = this.forma.get('nombre');
